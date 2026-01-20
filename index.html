@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DTZ Secure Mainframe</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-red: #ff003c;
+            --bg-color: #050505;
+            --glass-panel: rgba(10, 15, 20, 0.7);
+            --border-color: rgba(0, 243, 255, 0.3);
+            --text-glow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; scrollbar-width: none; }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--bg-color);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- 1. HACKER LOADING SCREEN --- */
+        #preloader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start;
+            padding: 40px; font-family: 'Share Tech Mono', monospace;
+        }
+        .boot-text { color: var(--neon-blue); font-size: 14px; margin-bottom: 5px; text-shadow: 0 0 5px var(--neon-blue); }
+        .progress-bar { width: 100%; height: 2px; background: #333; margin-top: 10px; position: relative; }
+        .progress-fill { height: 100%; background: var(--neon-blue); width: 0%; transition: width 0.1s; box-shadow: 0 0 10px var(--neon-blue); }
+
+        /* --- CRT EFFECT OVERLAY --- */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%; opacity: 0.6;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            position: fixed; top: 0; width: 100%; padding: 20px 30px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+        }
+        .logo { font-family: 'Orbitron'; font-size: 22px; font-weight: 900; letter-spacing: 2px; }
+        .logo span { color: var(--neon-blue); text-shadow: var(--text-glow); }
+        
+        .lang-btn {
+            background: rgba(0, 243, 255, 0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue);
+            padding: 8px 15px; font-family: 'Share Tech Mono'; cursor: pointer; transition: 0.3s;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+        .lang-btn:hover { background: var(--neon-blue); color: #000; box-shadow: var(--text-glow); }
+
+        /* --- LAYOUT --- */
+        .container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; padding-top: 80px; }
+        .section { display: none; width: 100%; animation: fadeIn 0.5s ease-out; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* --- MAIN CARDS --- */
+        .glass-card {
+            background: var(--glass-panel); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color); padding: 40px; border-radius: 10px;
+            text-align: center; max-width: 500px; margin: 0 auto; position: relative;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+
+        /* --- INTERACTIVE BOXES (MENU) --- */
+        .menu-grid { display: flex; flex-direction: column; gap: 20px; max-width: 600px; margin: 0 auto; }
+        .menu-box {
+            background: rgba(0,0,0,0.6); border: 1px solid #333; padding: 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .menu-box::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--neon-blue); transition: 0.3s;
+        }
+        .menu-box:hover { border-color: var(--neon-blue); transform: translateX(10px); background: rgba(0, 243, 255, 0.05); }
+        .menu-box:hover::before { box-shadow: 0 0 15px var(--neon-blue); }
+        
+        .menu-title { font-family: 'Orbitron'; font-size: 18px; letter-spacing: 2px; }
+        .menu-icon { font-size: 20px; color: var(--neon-blue); }
+
+        /* --- 2. THE SPECIAL INTERFACE (MODAL) --- */
+        .info-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(15px);
+        }
+        .info-modal.active { display: flex; animation: openHolo 0.4s ease-out; }
+        @keyframes openHolo { from { opacity: 0; transform: scaleY(0.01) scaleX(0); } to { opacity: 1; transform: scaleY(1) scaleX(1); } }
+
+        .holo-interface {
+            width: 90%; max-width: 700px; height: 80vh;
+            border: 2px solid var(--neon-blue);
+            background: radial-gradient(circle at center, rgba(0, 243, 255, 0.05), transparent);
+            position: relative; padding: 20px;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.2), inset 0 0 50px rgba(0, 243, 255, 0.1);
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+        /* HUD Corners */
+        .corner { position: absolute; width: 30px; height: 30px; border: 3px solid var(--neon-blue); transition: 0.3s; }
+        .tl { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+        .tr { top: -2px; right: -2px; border-left: none; border-bottom: none; }
+        .bl { bottom: -2px; left: -2px; border-right: none; border-top: none; }
+        .br { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+        .holo-header {
+            font-family: 'Orbitron'; color: var(--neon-blue); font-size: 24px;
+            text-align: center; border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px; margin-bottom: 20px; text-transform: uppercase;
+        }
+        .holo-content {
+            flex: 1; overflow-y: auto; padding-right: 10px;
+            font-family: 'Share Tech Mono', monospace; font-size: 15px; line-height: 1.6; color: #ccc;
+        }
+        .holo-content p { margin-bottom: 15px; }
+        .holo-content li { margin-bottom: 10px; list-style: none; display: flex; gap: 10px; }
+        .holo-content li::before { content: '>'; color: var(--neon-red); }
+        
+        .close-holo {
+            margin-top: 20px; background: transparent; border: 1px solid var(--neon-red); color: var(--neon-red);
+            padding: 10px; width: 100%; cursor: pointer; font-family: 'Orbitron'; font-weight: bold;
+            transition: 0.3s;
+        }
+        .close-holo:hover { background: var(--neon-red); color: black; box-shadow: 0 0 20px var(--neon-red); }
+
+        /* --- MUSIC PLAYER --- */
+        .music-console {
+            display: inline-flex; align-items: center; gap: 15px;
+            padding: 10px 30px; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px; background: rgba(0,0,0,0.5); margin-bottom: 25px;
+        }
+        .play-btn {
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon-blue);
+            background: transparent; color: var(--neon-blue); cursor: pointer; display: flex; justify-content: center; align-items: center;
+        }
+
+        /* --- BUTTONS --- */
+        .btn-glitch {
+            width: 100%; padding: 15px; background: var(--neon-blue); color: black; border: none;
+            font-family: 'Orbitron'; font-weight: bold; font-size: 16px; cursor: pointer;
+            clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+            transition: 0.3s;
+        }
+        .btn-glitch:hover { transform: scale(1.02); box-shadow: 0 0 30px var(--neon-blue); }
+
+        /* --- FORMS & SELECTION --- */
+        .selection-grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
+        .select-box {
+            width: 100%; max-width: 220px; padding: 20px; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s;
+        }
+        .select-box:hover { background: rgba(0, 243, 255, 0.1); border-color: var(--neon-blue); }
+        
+        input, textarea {
+            width: 100%; padding: 12px; background: #0b0b0b; border: 1px solid #333;
+            color: white; font-family: 'Rajdhani'; margin-bottom: 15px;
+        }
+        input:focus, textarea:focus { outline: none; border-color: var(--neon-blue); }
+
+        /* Language visibility classes */
+        .lang-en { display: block; }
+        .lang-si { display: none; }
+
+        /* Mobile */
+        @media(max-width: 600px) {
+            .glass-card { width: 95%; padding: 25px; }
+            .holo-interface { width: 95%; height: 85vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="preloader">
+        <div id="boot-log"></div>
+        <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="https://files.catbox.moe/8y70dy.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="scanlines"></div>
+    <div id="particles-js"></div>
+
+    <div class="header">
+        <div class="logo">DTZ <span>SYSTEM</span></div>
+        <button class="lang-btn" onclick="toggleLanguage()">
+            <i class="fas fa-globe"></i> <span id="lang-text">EN / SI</span>
+        </button>
+    </div>
+
+    <div class="container">
+
+        <section id="sec-welcome" class="section active">
+            <div class="glass-card">
+                <i class="fas fa-biohazard" style="font-size: 60px; color: var(--neon-blue); margin-bottom: 20px;"></i>
+                <h1 style="font-family:'Orbitron'; font-size:32px; margin-bottom:10px;">DARK TECH ZONE</h1>
+                <p style="color:#aaa; margin-bottom:25px; letter-spacing:1px;" data-en="SECURE ACCESS PORTAL" data-si="ආරක්ෂිත පිවිසුම් ද්වාරය">SECURE ACCESS PORTAL</p>
+
+                <div class="music-console">
+                    <button class="play-btn" onclick="toggleMusic()"><i class="fas fa-play" id="play-icon"></i></button>
+                    <div style="font-family:'Share Tech Mono'; font-size:12px; color:var(--neon-blue);">AUDIO FEED</div>
+                </div>
+
+                <button class="btn-glitch" onclick="navTo('sec-menu')" data-en="INITIALIZE SYSTEM" data-si="පද්ධතියට පිවිසෙන්න">
+                    INITIALIZE SYSTEM
+                </button>
+            </div>
+        </section>
+
+        <section id="sec-menu" class="section">
+            <h2 style="text-align:center; font-family:'Orbitron'; margin-bottom:30px;" data-en="SELECT MODULE" data-si="තොරතුරු තෝරන්න">SELECT MODULE</h2>
+            
+            <div class="menu-grid">
+                <div class="menu-box" onclick="openModal('intro')">
+                    <div class="menu-title" data-en="INTRODUCTION" data-si="හැඳින්වීම">INTRODUCTION</div>
+                    <i class="fas fa-info-circle menu-icon"></i>
+                </div>
+
+                <div class="menu-box" onclick="openModal('rules')" style="border-left-color: var(--neon-red);">
+                    <style>.menu-box:nth-child(2):before { background: var(--neon-red); }</style>
+                    <div class="menu-title" data-en="SYSTEM RULES" data-si="නීති මාලාව">SYSTEM RULES</div>
+                    <i class="fas fa-gavel menu-icon" style="color:var(--neon-red);"></i>
+                </div>
+            </div>
+
+            <div style="text-align:center; margin-top:40px;">
+                <button class="btn-glitch" onclick="navTo('sec-selection')" style="max-width:250px;" data-en="PROCEED TO SELECTION" data-si="තෝරාගැනීමට යන්න">
+                    PROCEED TO SELECTION
+                </button>
+                <br><br>
+                <button onclick="navTo('sec-welcome')" style="background:transparent; border:none; color:#555; cursor:pointer;">BACK</button>
+            </div>
+        </section>
+
+        <section id="sec-selection" class="section">
+            <h2 style="text-align:center; font-family:'Orbitron'; margin-bottom:20px;" data-en="SELECT OFFICER" data-si="නිලධාරියා තෝරන්න">SELECT OFFICER</h2>
+            
+            <div class="selection-grid">
+                <div class="select-box" onclick="openForm('94788262515', 'blue')" style="border-top:3px solid var(--neon-blue);">
+                    <i class="fas fa-user-astronaut" style="font-size:40px; color:var(--neon-blue);"></i>
+                    <div style="margin-top:10px; font-weight:bold;">OFFICER 01</div>
+                </div>
+                <div class="select-box" onclick="openForm('94763530935', 'red')" style="border-top:3px solid var(--neon-red);">
+                    <i class="fas fa-user-secret" style="font-size:40px; color:var(--neon-red);"></i>
+                    <div style="margin-top:10px; font-weight:bold;">OFFICER 02</div>
+                </div>
+            </div>
+
+            <div style="text-align:center;">
+                <button onclick="navTo('sec-menu')" style="background:transparent; border:1px solid #333; color:#aaa; padding:10px 25px; cursor:pointer;">BACK</button>
+            </div>
+        </section>
+
+        <section id="sec-form" class="section">
+            <div class="glass-card">
+                <h2 id="form-title" style="margin-bottom:20px; font-family:'Orbitron';">DATA ENTRY</h2>
+                <form id="admissionForm">
+                    <input type="hidden" name="adminNumber" id="adminNumber">
+                    <input type="text" id="fname" required placeholder="Full Name">
+                    <input type="text" id="ftown" required placeholder="Town">
+                    <input type="number" id="fage" required placeholder="Age">
+                    <input type="text" id="fphone" required placeholder="Phone Number">
+                    <textarea id="fskill" rows="3" placeholder="Special Skills"></textarea>
+
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button type="button" onclick="navTo('sec-selection')" style="flex:1; background:#111; border:1px solid #333; color:#888;">CANCEL</button>
+                        <button type="submit" id="submit-btn" class="btn-glitch" style="flex:1;" data-en="TRANSMIT" data-si="යොමු කරන්න">TRANSMIT</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="info-modal" class="info-modal">
+        <div class="holo-interface">
+            <span class="corner tl"></span><span class="corner tr"></span>
+            <span class="corner bl"></span><span class="corner br"></span>
+            
+            <div class="holo-header" id="modal-title">ACCESSING DATA...</div>
+            
+            <div class="holo-content" id="modal-content">
+                </div>
+
+            <button class="close-holo" onclick="closeModal()">CLOSE TERMINAL</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA CONTENT (ENGLISH & SINHALA) ---
+        const contentData = {
+            intro: {
+                title_en: "DTZ INTERVIEW PROTOCOL",
+                title_si: "DTZ හැඳින්වීම",
+                body_en: `
+                    <p><strong>~:|𝗧ʜᴇ 𝗗ᴀʀᴋ 𝗧ᴇᴄʜ 𝗭ꪮɴᴇ 𝗜ɴᴛᴇʀᴠɪᴇ𝗪|:🎓🪽</strong></p>
+                    <p>(Dark Tech Zone) was created in 2023 with the aim of developing Cyber Security, Programming, Coding, and other skills, and to build new capabilities..! ~🧠:🗣️~</p>
+                    <p style="margin-top:20px; color:var(--neon-blue);">[ ᴩᴏᴡᴇʀᴅ ʙʏ: ᴅ:ᴀ:ʀ:ᴋ-ᴛ:ᴇ:ᴄ:ʜ-ᴢ:ᴏ:ɴ:ᴇ ]</p>
+                `,
+                body_si: `
+                    <p><strong>~:|𝗧ʜᴇ 𝗗ᴀʀᴋ 𝗧ᴇᴄʜ 𝗭ꪮɴᴇ 𝗜ɴᴛᴇʀᴠɪᴇ𝗪|:🎓🪽</strong></p>
+                    <p>(ᴅᴀʀᴋ ᴛᴇᴄʜ ᴢᴏɴᴇ) 𝟸𝟶𝟸𝟹 𝘊𝘳𝘦𝘢𝘵𝘦 කල 𝘊𝘺𝘣𝘦𝘳 𝘚𝘦𝘲𝘶𝘢𝘳𝘪𝘵𝘺 / 𝘗𝘳𝘰𝘨𝘳𝘢𝘮𝘮𝘪𝘯𝘨 /𝘊𝘰𝘥𝘪𝘯𝘨 / 𝘖𝘵𝘩𝘦𝘳 𝘚𝘬𝘪𝘭𝘭𝘴 දියුණු කිරීමට සහ හැකියාවන් නිර්මාණය කිරීමට ආරම්භ කරන ලද්දකි..! ~🧠:🗣️~</p>
+                    <p style="margin-top:20px; color:var(--neon-blue);">[ ᴩᴏᴡᴇʀᴅ ʙʏ: ᴅ:ᴀ:ʀ:ᴋ-ᴛ:ᴇ:ᴄ:ʜ-ᴢ:ᴏ:ɴ:ᴇ ]</p>
+                `
+            },
+            rules: {
+                title_en: "SYSTEM RULES & REGULATIONS",
+                title_si: "නීති සහ රෙගුලාසි",
+                body_en: `
+                    <ul>
+                        <li>Correct Name & About info is mandatory.</li>
+                        <li>Inactive members (dead bodies) will be removed.</li>
+                        <li>Inform admins before leaving or if in other network teams.</li>
+                        <li>No conflicts/fights inside the team.</li>
+                        <li>Disrespecting Leaders is prohibited.</li>
+                        <li>Leaking data/names outside is strictly forbidden.</li>
+                        <li style="color:var(--neon-red); font-weight:bold;">Bots are strictly prohibited. 3 warnings, then ban.</li>
+                    </ul>
+                `,
+                body_si: `
+                    <ul>
+                        <li>එබවුට් එක හා නම හරි අනිවාරෙන් දාගෙන ඉන්න ඕන.</li>
+                        <li>චැට් කරන්නෙ නැතිව මල මිනි වගෙ ඉන්න බැ රිමොව් කරනවා.</li>
+                        <li>ජාලෙ ටීම් වල ඉන්නව නම් අපිත් එක්ක ඇරියස් නැති ටීම් වල ඉන්න ඕන.</li>
+                        <li>වෙනත් සයිබර් ටීම් ( බග් ) ඉන්න බැ.</li>
+                        <li>මේක ඇතුලෙ වලි දාගන්න එපා.</li>
+                        <li>ලීඩර්ස්ලා එක්ක කට ගහගෙන යන්න බැ.</li>
+                        <li>මේකෙ ඩිස් , නම වෙනත් ඩීටෙස් පිටට යන්න බැ.</li>
+                        <li style="color:var(--neon-red); font-weight:bold;">මේක ඇතුලෙ බොට්ලා use කරන එක සපුරා තහනම්.</li>
+                    </ul>
+                `
+            }
+        };
+
+        // --- GLOBAL STATE ---
+        let currentLang = 'en';
+        let currentModalType = ''; // 'intro' or 'rules'
+
+        // --- PRELOADER ---
+        window.addEventListener('load', () => {
+            const logs = ["Booting Kernel...", "Loading Modules...", "Connecting to DTZ Server...", "Secure Connection Established."];
+            const logDiv = document.getElementById('boot-log');
+            const bar = document.getElementById('progress');
+            let i = 0;
+
+            function typeLog() {
+                if(i < logs.length) {
+                    let p = document.createElement('div');
+                    p.className = 'boot-text';
+                    p.innerText = "> " + logs[i];
+                    logDiv.appendChild(p);
+                    bar.style.width = ((i+1)/logs.length)*100 + "%";
+                    i++;
+                    setTimeout(typeLog, 500);
+                } else {
+                    setTimeout(() => { document.getElementById('preloader').style.display = 'none'; }, 800);
+                }
+            }
+            typeLog();
+        });
+
+        // --- MODAL LOGIC (THE NEW INTERFACE) ---
+        function openModal(type) {
+            currentModalType = type;
+            const modal = document.getElementById('info-modal');
+            const title = document.getElementById('modal-title');
+            const content = document.getElementById('modal-content');
+            
+            // Set content based on language
+            updateModalContent();
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('info-modal').classList.remove('active');
+        }
+
+        function updateModalContent() {
+            if(!currentModalType) return;
+            
+            const titleEl = document.getElementById('modal-title');
+            const contentEl = document.getElementById('modal-content');
+            
+            if(currentLang === 'en') {
+                titleEl.innerText = contentData[currentModalType].title_en;
+                contentEl.innerHTML = contentData[currentModalType].body_en;
+            } else {
+                titleEl.innerText = contentData[currentModalType].title_si;
+                contentEl.innerHTML = contentData[currentModalType].body_si;
+            }
+        }
+
+        // --- LANGUAGE SWITCHER ---
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'si' : 'en';
+            
+            // Update Main UI
+            document.querySelectorAll('[data-en]').forEach(el => {
+                el.innerText = el.getAttribute(`data-${currentLang}`);
+            });
+
+            // Update Form Placeholders
+            if(currentLang === 'si') {
+                document.getElementById('fname').placeholder = "සම්පූර්ණ නම";
+                document.getElementById('ftown').placeholder = "නගරය";
+                document.getElementById('fage').placeholder = "වයස";
+                document.getElementById('fphone').placeholder = "දුරකථන අංකය";
+                document.getElementById('fskill').placeholder = "විශේෂ හැකියාවන්";
+            } else {
+                document.getElementById('fname').placeholder = "Full Name";
+                document.getElementById('ftown').placeholder = "Town";
+                document.getElementById('fage').placeholder = "Age";
+                document.getElementById('fphone').placeholder = "Phone Number";
+                document.getElementById('fskill').placeholder = "Special Skills";
+            }
+
+            // If modal is open, update its content immediately
+            if(document.getElementById('info-modal').classList.contains('active')) {
+                updateModalContent();
+            }
+        }
+
+        // --- MUSIC ---
+        const audio = document.getElementById('bg-music');
+        const icon = document.getElementById('play-icon');
+        let isPlaying = false;
+
+        function toggleMusic() {
+            if(!isPlaying) {
+                audio.play();
+                icon.classList.remove('fa-play');
+                icon.classList.add('fa-pause');
+            } else {
+                audio.pause();
+                icon.classList.remove('fa-pause');
+                icon.classList.add('fa-play');
+            }
+            isPlaying = !isPlaying;
+        }
+
+        // --- NAVIGATION & FORM ---
+        function navTo(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function openForm(number, color) {
+            document.getElementById('adminNumber').value = number;
+            const btn = document.getElementById('submit-btn');
+            const title = document.getElementById('form-title');
+            
+            if(color === 'red') {
+                btn.style.background = '#ff003c';
+                title.style.color = '#ff003c';
+                title.innerText = "OFFICER 02 ENTRY";
+            } else {
+                btn.style.background = '#00f3ff';
+                title.style.color = '#00f3ff';
+                title.innerText = "OFFICER 01 ENTRY";
+            }
+            navTo('sec-form');
+        }
+
+        document.getElementById('admissionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const num = document.getElementById('adminNumber').value;
+            const color = num === '94788262515' ? '#00f3ff' : '#ff003c';
+            
+            const d = {
+                name: document.getElementById('fname').value,
+                town: document.getElementById('ftown').value,
+                age: document.getElementById('fage').value,
+                phone: document.getElementById('fphone').value,
+                skill: document.getElementById('fskill').value
+            };
+
+            const alertHtml = `
+                <div style="text-align:left;">
+                    <div style="color:#ffe600; margin-bottom:10px; border-left:3px solid #ffe600; padding-left:10px;">
+                        <strong>SINHALA:</strong><br>
+                        කරුණාකර ඔබගේ <b>මුහුණ පෙනෙන ඡායාරූප 04 ක්</b> දැන්ම අපගේ WhatsApp අංකයට එවන්න.
+                    </div>
+                    <div style="color:${color}; border-left:3px solid ${color}; padding-left:10px;">
+                        <strong>ENGLISH:</strong><br>
+                        You MUST send <b>4 CLEAR FACE PHOTOS</b> to our WhatsApp number immediately.
+                    </div>
+                </div>
+            `;
+
+            Swal.fire({
+                title: 'VERIFICATION REQUIRED',
+                html: alertHtml,
+                icon: 'warning',
+                iconColor: color,
+                background: '#0a0a0a',
+                color: 'white',
+                showCancelButton: true,
+                confirmButtonText: 'SEND PHOTOS',
+                confirmButtonColor: color,
+                cancelButtonColor: '#333'
+            }).then((res) => {
+                if(res.isConfirmed) {
+                    Swal.fire({
+                        title: 'ENCRYPTING...',
+                        text: 'Redirecting to secure channel',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        background: '#0a0a0a',
+                        color: 'white',
+                        willOpen: () => Swal.showLoading()
+                    });
+
+                    const msg = `*🔒 DTZ DATA PACKET*%0A%0A*👤 Name:* ${d.name}%0A*🏠 Town:* ${d.town}%0A*🎂 Age:* ${d.age}%0A*📞 Contact:* ${d.phone}%0A*💡 Skills:* ${d.skill}%0A%0A-----------------------------%0A*⚠️ ACTION:*%0APlease upload *04 FACE PHOTOS* now.`;
+                    
+                    setTimeout(() => {
+                        window.location.href = `https://wa.me/${num}?text=${msg}`;
+                    }, 2000);
+                }
+            });
+        });
+
+        // --- PARTICLES ---
+        particlesJS("particles-js", {
+            "particles": { "number": { "value": 50 }, "color": { "value": "#00f3ff" }, "opacity": { "value": 0.3 }, "size": { "value": 2 }, "line_linked": { "enable": true, "color": "#00f3ff", "opacity": 0.1 }, "move": { "speed": 1 } }
+        });
+    </script>
+</body>
+</html>
